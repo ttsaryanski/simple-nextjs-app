@@ -1,36 +1,241 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Inventory Management System
+
+A modern, full-stack inventory management application built with Next.js, Prisma, and PostgreSQL. Track products, monitor stock levels, and gain valuable insights through an intuitive dashboard.
+
+## Table of Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Environment Setup](#environment-setup)
+    - [Database Setup](#database-setup)
+- [Usage](#usage)
+- [Project Structure](#project-structure)
+- [Development](#development)
+- [Contributing](#contributing)
+- [Support](#support)
+
+## Features
+
+- **Product Management**: Create, view, and manage inventory products with SKU tracking
+- **Real-time Dashboard**: Monitor key metrics including total products, low-stock alerts, and inventory value
+- **Analytics**: Track weekly product trends with interactive charts
+- **Low-Stock Alerts**: Automatic detection and notification of products running low on inventory
+- **Search & Filter**: Paginated product search with case-insensitive filtering
+- **User Authentication**: Secure user management with Stack authentication
+- **Responsive Design**: Mobile-friendly interface built with TailwindCSS
+- **Multi-user Support**: Each user maintains their own isolated inventory
+
+## Tech Stack
+
+### Frontend
+
+- **Next.js 16.2.6** - React 19 App Router framework
+- **TailwindCSS 4** - Utility-first CSS framework
+- **Lucide React** - Icon library
+- **Recharts** - React charting library for analytics
+
+### Backend
+
+- **Prisma 7.8.0** - ORM for PostgreSQL
+- **PostgreSQL** - Relational database (via Neon adapter)
+- **Stack** - Authentication and user management
+
+### Development
+
+- **TypeScript 5** - Type-safe development
+- **ESLint 9** - Code linting
+- **Next.js 16.2.6** - Built-in development server
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- **Node.js** 18+ (with npm or yarn)
+- **PostgreSQL** database (local or cloud-hosted)
+- **Git** for version control
+
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone <repository-url>
+cd nextjs
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+### Environment Setup
+
+Create a `.env.local` file in the project root with the following variables:
+
+```env
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/inventory_db
+
+# Authentication (Stack)
+NEXT_PUBLIC_STACK_PROJECT_ID=your_stack_project_id
+STACK_PROJECT_SECRET_KEY=your_stack_secret_key
+```
+
+### Database Setup
+
+1. Set up the database schema:
+
+```bash
+npm run prisma migrate dev
+```
+
+2. (Optional) Seed the database with sample data:
+
+```bash
+npm run prisma db seed
+```
+
+## Usage
+
+### Starting the Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The application will be available at [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Building for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+### Key Features Walkthrough
 
-To learn more about Next.js, take a look at the following resources:
+**Dashboard**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Access at `/dashboard` to view inventory overview
+- See key metrics: total products, low-stock count, inventory value
+- Review weekly product trends in the analytics chart
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Product Management**
 
-## Deploy on Vercel
+- Navigate to `/inventory` to browse all products
+- Use the search bar to filter products by name
+- Add new products at `/add-product` with name, SKU, price, and quantity
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Settings**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Manage account settings at `/settings`
+- View and update user preferences
+
+## Project Structure
+
+```
+nextjs/
+├── app/                      # Next.js App Router pages
+│   ├── layout.tsx            # Root layout with navigation
+│   ├── page.tsx              # Home page
+│   ├── dashboard/            # Dashboard page
+│   ├── inventory/            # Product inventory page
+│   ├── add-product/          # Product creation page
+│   ├── settings/             # User settings
+│   └── sign-in/              # Authentication page
+├── components/               # Reusable React components
+│   ├── products.charts.tsx   # Chart components
+│   └── pagination.tsx        # Pagination component
+├── lib/                      # Utility functions
+│   ├── auth.ts              # Authentication helpers
+│   ├── prisma.ts            # Prisma client instance
+│   └── product/             # Product-related utilities
+├── repositories/             # Data access layer
+│   └── product.repository.ts # Product database queries
+├── services/                 # Business logic layer
+│   └── product.services.ts   # Product service functions
+├── prisma/                   # Database schema and migrations
+│   ├── schema.prisma        # Data models
+│   └── migrations/          # Migration history
+├── stack/                    # Stack authentication setup
+└── public/                   # Static assets
+```
+
+## Development
+
+### Available Scripts
+
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build for production
+- `npm start` - Start production server
+- `npm run lint` - Run ESLint code linting
+
+### Architecture Overview
+
+The project follows a layered architecture:
+
+- **Pages** (`app/`) - User-facing routes and views
+- **Services** (`services/`) - Business logic and orchestration
+- **Repositories** (`repositories/`) - Direct database access with Prisma
+- **Components** (`components/`) - Reusable UI elements
+- **Utils** (`lib/`) - Helper functions and configurations
+
+### Database Models
+
+**Product**
+
+```typescript
+- id: String (CUID)
+- name: String
+- sku: String (unique, optional)
+- price: Decimal (12,2)
+- quantity: Int
+- lowStockAt: Int (optional)
+- userId: String (foreign key)
+- createdAt: DateTime
+- updatedAt: DateTime
+```
+
+**User**
+
+```typescript
+- id: String
+- email: String (unique)
+- createdAt: DateTime
+- products: Product[] (relation)
+```
+
+## Contributing
+
+We welcome contributions! To get started:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Commit your changes: `git commit -m 'Add your feature'`
+4. Push to the branch: `git push origin feature/your-feature-name`
+5. Open a Pull Request
+
+Please ensure:
+
+- Code follows the existing style and conventions
+- All changes are tested
+- Commit messages are clear and descriptive
+- Pull requests include a description of changes
+
+## Support
+
+For questions, issues, or suggestions:
+
+- **Documentation**: Check existing code comments and TypeScript types
+- **Issues**: Open a GitHub issue with detailed information
+- **Discussions**: Use GitHub Discussions for questions and ideas
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
