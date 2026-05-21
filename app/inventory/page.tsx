@@ -1,8 +1,6 @@
-import {
-    getProductsPaginated,
-    deleteProduct,
-} from "@/services/product.services";
+import { getProductsPaginated } from "@/services/product.services";
 import Pagination from "@/components/pagination";
+import DeleteButton from "@/components/delete.button";
 
 const InventoryPage = async ({
     searchParams,
@@ -101,25 +99,7 @@ const InventoryPage = async ({
                                             {product.lowStockAt || "-"}
                                         </td>
                                         <td className="px-6 py-4  text-sm text-gray-500">
-                                            <form
-                                                action={async (
-                                                    formData: FormData,
-                                                ) => {
-                                                    "use server";
-                                                    await deleteProduct(
-                                                        formData,
-                                                    );
-                                                }}
-                                            >
-                                                <input
-                                                    type="hidden"
-                                                    name="id"
-                                                    value={product.id}
-                                                />
-                                                <button className="text-red-600 hover:text-red-900">
-                                                    Delete
-                                                </button>
-                                            </form>
+                                            <DeleteButton id={product.id} />
                                         </td>
                                     </tr>
                                 ))}

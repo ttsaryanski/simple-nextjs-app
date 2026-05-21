@@ -66,3 +66,16 @@ export async function deleteProductById(productId: string, userId: string) {
         },
     });
 }
+
+export async function createProduct(data: {
+    name: string;
+    price: number;
+    quantity: number;
+    sku?: string;
+    lowStockAt?: number;
+    userId: string;
+}) {
+    await prisma.product.create({
+        data,
+    });
+}
