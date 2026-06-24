@@ -19,7 +19,7 @@ model Product {
   quantity   Int     @default(0)
   lowStockAt Int?
 
-  userId String // Stack Auth User ID
+  userId String // Clerk User ID
   user   User   @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
@@ -29,10 +29,46 @@ model Product {
   @@index([createdAt])
 }
 
+model Bill {
+  id         String  @id @default(cuid())
+  month      String
+  year       String
+  total      Decimal @db.Decimal(12, 2)
+  lowStockAt Int?
+
+  addressId String
+  address   Address @relation(fields: [addressId], references: [id])
+
+  userId String // Clerk User ID
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  //@@index([createdAt])
+
+  @@index([userId, addressId])
+}
+
+model Address {
+  id        String  @id @default(cuid())
+  address   String
+  isPrimary Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String // Clerk User ID
+  user   User   @relation(fields: [userId], references: [id])
+
+  bills Bill[]
+}
+
 model User {
   id        String   @id
   email     String   @unique
   createdAt DateTime @default(now())
 
-  products Product[]
+  products  Product[]
+  bills     Bill[]
+  addresses Address[]
 }

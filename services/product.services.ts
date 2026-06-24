@@ -92,7 +92,7 @@ export async function createProduct(formData: FormData) {
             ...parsedData.data,
             userId: user.id,
         });
-    } catch (error) {
+    } catch {
         throw new Error("Failed to create product");
     }
 
