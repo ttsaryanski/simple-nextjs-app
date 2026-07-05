@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentUser } from "@/lib/auth";
+import { requireCurrentUser } from "@/lib/auth";
 import { getDashboardStats } from "@/lib/product/product.stats";
 import { getWeeklyProductsData } from "@/lib/product/product.analytics";
 import {
@@ -13,12 +13,8 @@ import { createProductSchema } from "@/validators/products.schema";
 
 import { redirect } from "next/navigation";
 
-let user;
 export async function getDashboardData() {
-    user = await getCurrentUser();
-    if (!user) {
-        redirect("/sign-in");
-    }
+    const user = await requireCurrentUser();
 
     const [stats, weeklyProductsData] = await Promise.all([
         getDashboardStats(user.id),
@@ -36,10 +32,7 @@ export async function getProductsPaginated(
     page: number,
     pageSize: number,
 ) {
-    user = await getCurrentUser();
-    if (!user) {
-        redirect("/sign-in");
-    }
+    const user = await requireCurrentUser();
 
     const where = {
         userId: user.id,
@@ -57,10 +50,7 @@ export async function getProductsPaginated(
 }
 
 export async function deleteProduct(productId: string) {
-    user = await getCurrentUser();
-    if (!user) {
-        redirect("/sign-in");
-    }
+    const user = await requireCurrentUser();
 
     if (!productId) {
         throw new Error("Product ID is required");
@@ -70,10 +60,7 @@ export async function deleteProduct(productId: string) {
 }
 
 export async function createProduct(formData: FormData) {
-    user = await getCurrentUser();
-    if (!user) {
-        redirect("/sign-in");
-    }
+    const user = await requireCurrentUser();
 
     const parsedData = createProductSchema.safeParse({
         name: formData.get("name"),

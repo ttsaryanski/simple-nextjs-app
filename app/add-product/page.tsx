@@ -1,14 +1,8 @@
-import { createProduct } from "@/services/product.services";
-import { getCurrentUser } from "@/lib/auth";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+
+import { createProduct } from "@/services/product.services";
 
 const AddProductPage = async () => {
-    const user = await getCurrentUser();
-    if (!user) {
-        redirect("/sign-in");
-    }
-
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
             <main className="p-8">
