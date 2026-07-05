@@ -12,13 +12,14 @@ import { AddressesProps } from "@/components/address/addresses";
 const initialState = {
     success: true,
     message: "",
+    path: "",
 };
 const CreateBillForm = ({
     primaryAddress,
-    error,
+    addressError,
 }: {
     primaryAddress: AddressesProps | null;
-    error: string;
+    addressError: string;
 }) => {
     const [state, FormAction, pending] = useActionState(
         (prevState: typeof initialState, formData: FormData) =>
@@ -27,19 +28,17 @@ const CreateBillForm = ({
     );
 
     useEffect(() => {
-        if (error) {
-            toast.error(error);
+        if (addressError) {
+            toast.error(addressError);
         }
-        error = "";
-    }, [error]);
+        addressError = "";
+    }, [addressError]);
 
     useEffect(() => {
-        error = "";
-        if (!state.success) {
+        if (!state.success && state.path !== "total") {
             toast.error(state.message);
         }
         state.success = true;
-        error = "";
     }, [state]);
 
     const currentYear = new Date().getFullYear();
@@ -155,10 +154,11 @@ const CreateBillForm = ({
                     name="total"
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-transparent"
-                    min="0"
-                    max="1000000"
                     placeholder="Enter bill amount"
                 />
+                {!state.success && state.path === "total" && (
+                    <p className="text-red-500 text-xs mt-2">{state.message}</p>
+                )}
             </div>
 
             <div className="flex gap-5">

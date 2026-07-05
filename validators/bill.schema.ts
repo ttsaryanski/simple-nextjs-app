@@ -6,8 +6,8 @@ export const createBillSchema = z.object({
     period: z.date(),
     total: z
         .number()
-        .min(0, "Total must be a positive number")
-        .max(1000000, "Total must be less than or equal to 1000000"),
+        .min(0, "Bill must be a positive number")
+        .max(1000000, "Bill must be less than or equal to 1000000"),
     addressId: z.cuid2("Invalid address ID"),
 });
 export type CreateBillInput = z.infer<typeof createBillSchema>;

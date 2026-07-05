@@ -35,7 +35,7 @@ const AddBillPage = async () => {
                     <div className="bg-white rounded-lg border border-gray-200 p-6">
                         <CreateBillForm
                             primaryAddress={primaryAddress}
-                            error={message}
+                            addressError={message}
                         />
                     </div>
                 </div>

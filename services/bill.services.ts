@@ -14,6 +14,7 @@ import {
 type CreateBillState = {
     success: boolean;
     message: string;
+    path?: string;
 };
 export async function createBill(
     _prevState: CreateBillState,
@@ -36,6 +37,7 @@ export async function createBill(
         return {
             success: false,
             message: parsedData.error.issues[0].message,
+            path: parsedData.error.issues[0].path[0] as string,
         };
     }
 
@@ -51,6 +53,7 @@ export async function createBill(
                 error instanceof Error
                     ? error.message
                     : "Failed to create bill",
+            path: "",
         };
     }
     redirect("/bills");
