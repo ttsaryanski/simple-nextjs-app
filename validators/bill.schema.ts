@@ -1,0 +1,21 @@
+import { z } from "zod";
+
+export const createBillSchema = z.object({
+    month: z.number().min(1).max(12, "Month must be between 1 and 12"),
+    year: z.number().min(1900).max(2100, "Year must be between 1900 and 2100"),
+    period: z.date(),
+    total: z
+        .number()
+        .min(0, "Total must be a positive number")
+        .max(1000000, "Total must be less than or equal to 1000000"),
+    addressId: z.cuid2("Invalid address ID"),
+});
+export type CreateBillInput = z.infer<typeof createBillSchema>;
+
+export const yearQuerySchema = z.object({
+    year: z
+        .number()
+        .min(1900, "Year must be between 1900 and 2100")
+        .max(2100, "Year must be between 1900 and 2100"),
+});
+export type YearQueryInput = z.infer<typeof yearQuerySchema>;

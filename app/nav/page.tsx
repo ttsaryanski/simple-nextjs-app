@@ -18,6 +18,7 @@ import {
     Bolt,
     UserLock,
     LocateFixed,
+    Euro,
 } from "lucide-react";
 
 function classNames(...classes: string[]) {
@@ -41,8 +42,20 @@ const NavigationBar = () => {
             icon: Package,
         },
         {
+            name: "Bills",
+            href: "/bills",
+            current: false,
+            icon: Euro,
+        },
+        {
             name: "Add Product",
             href: "/add-product",
+            current: false,
+            icon: Plus,
+        },
+        {
+            name: "Add Bill",
+            href: "/add-bill",
             current: false,
             icon: Plus,
         },
@@ -96,6 +109,7 @@ const NavigationBar = () => {
                                         <Link
                                             key={item.name}
                                             href={item.href}
+                                            prefetch={false}
                                             aria-current={
                                                 item.current
                                                     ? "page"
