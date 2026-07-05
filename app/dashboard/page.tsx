@@ -1,17 +1,10 @@
 import { TrendingUp } from "lucide-react";
 
-import { redirect } from "next/navigation";
-import { currentUser } from "@clerk/nextjs/server";
 import { getDashboardData } from "@/services/product.services";
 
 import { ProductsChart } from "@/components/products.charts";
 
 const Dashboard = async () => {
-    const user = await currentUser();
-    if (!user) {
-        redirect("/sign-in");
-    }
-
     const { stats, weeklyProductsData } = await getDashboardData();
 
     return (
