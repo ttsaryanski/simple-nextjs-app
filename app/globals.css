@@ -26,7 +26,55 @@ body {
 }
 
 @media (max-width: 800px) {
-    .address-page {
-        flex-direction: column;
-    }
+  .address-page {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .bills h1 {
+    font-size: var(--text-lg);
+  }
+
+  .bills p {
+    font-size: var(--text-xs);
+  }
+
+    /* .bills th,
+    .bills td {
+        font-weight: 400;
+    } */
+}
+
+@media (max-width: 500px) {
+  .bills main {
+    padding: calc(var(--spacing) * 4);
+  }
+
+  .search-form {
+    flex-direction: column;
+  }
+
+  .bills h1 {
+    font-size: var(--text-base);
+  }
+
+  .primary h1{
+    text-align: right;
+  }
+
+  .bills th,
+  .bills td {
+    padding-inline: calc(var(--spacing) * 2);
+    text-align: center;
+  }
+
+  .bills .form-div {
+    padding: calc(var(--spacing) * 2);
+  }
+
+  .form-div input,
+  .form-div button {
+    padding: calc(var(--spacing) * 0.5);
+  }
 }
