@@ -12,7 +12,6 @@ const initialState = {
     success: true,
     message: "",
 };
-
 const CreateAddressForm = () => {
     const [state, FormAction, pending] = useActionState(
         createAddress,

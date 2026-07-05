@@ -6,6 +6,12 @@ export async function getAllAddresses(userId: string) {
     });
 }
 
+export async function getPrimaryAddress(userId: string) {
+    return prisma.address.findFirst({
+        where: { userId, isPrimary: true },
+    });
+}
+
 // export async function getLowStockProductsCount(userId: string) {
 //     return prisma.product.count({
 //         where: { userId, lowStockAt: { not: null }, quantity: { lte: 5 } },
@@ -68,10 +74,16 @@ export async function deleteAddressById(addressId: string, userId: string) {
 }
 
 export async function createAddress(data: { address: string; userId: string }) {
+    const existingAddress = await prisma.address.findFirst({
+        where: { address: data.address, userId: data.userId },
+    });
+    if (existingAddress) {
+        throw new Error("Address already exists");
+    }
+
     const count = await prisma.address.count({
         where: { userId: data.userId },
     });
-
     await prisma.address.create({
         data: {
             ...data,

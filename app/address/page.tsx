@@ -1,7 +1,3 @@
-import { redirect } from "next/navigation";
-
-import { getCurrentUser } from "@/lib/auth";
-
 import { getAddresses } from "@/services/address.services";
 
 import CreateAddressForm from "@/components/address/create.address.form";
@@ -9,11 +5,6 @@ import AddressesPage from "@/components/address/addresses";
 import { AddressesProps } from "@/components/address/addresses";
 
 const AddressPage = async () => {
-    const user = await getCurrentUser();
-    if (!user) {
-        redirect("/sign-in");
-    }
-
     let addresses: AddressesProps[] = [];
     let message = "";
     try {

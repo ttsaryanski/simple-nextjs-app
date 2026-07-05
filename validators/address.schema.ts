@@ -6,3 +6,4 @@ export const createAddressSchema = z.object({
         .min(3, "Address must be at least 3 characters")
         .max(50, "Address must be at most 50 characters"),
 });
+export type CreateAddressInput = z.infer<typeof createAddressSchema>;

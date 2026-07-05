@@ -1,7 +1,6 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
 
 import { toast } from "sonner";
 
@@ -10,14 +9,14 @@ import { setAddressPrimary } from "@/services/address.services";
 type SetAddressPrimaryButtonProps = {
     id: string;
     isPrimary: boolean;
+    onSuccess?: () => void;
 };
-
 const SetAddressPrimaryButton = ({
     id,
     isPrimary,
+    onSuccess,
 }: SetAddressPrimaryButtonProps) => {
     const [isPending, startTransition] = useTransition();
-    const router = useRouter();
 
     const handleSetPrimary = () => {
         const confirmed = confirm("Set this address as primary?");
@@ -27,7 +26,7 @@ const SetAddressPrimaryButton = ({
             void (async () => {
                 try {
                     await setAddressPrimary(id);
-                    router.refresh();
+                    onSuccess?.();
                 } catch (error) {
                     toast.error(
                         error instanceof Error
@@ -41,6 +40,7 @@ const SetAddressPrimaryButton = ({
 
     return (
         <button
+            type="button"
             className={`${isPrimary ? "text-gray-500 cursor-not-allowed" : "text-green-600 hover:text-green-900 hover:cursor-pointer"} mr-2`}
             onClick={handleSetPrimary}
             disabled={isPending || isPrimary}

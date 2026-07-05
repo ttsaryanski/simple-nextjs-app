@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { toast } from "sonner";
 
@@ -22,7 +22,12 @@ const AddressesPage = ({
     addresses: AddressesProps[];
     error: string;
 }) => {
-    const singleAddress = addresses.length === 1;
+    const [rows, setRows] = useState(addresses);
+    const singleAddress = rows.length === 1;
+
+    useEffect(() => {
+        setRows(addresses);
+    }, [addresses]);
 
     useEffect(() => {
         if (error) {
@@ -30,9 +35,18 @@ const AddressesPage = ({
         }
     }, [error]);
 
+    const handlePrimaryChanged = (addressId: string) => {
+        setRows((current) =>
+            current.map((address) => ({
+                ...address,
+                isPrimary: address.id === addressId,
+            })),
+        );
+    };
+
     return (
         <>
-            {addresses.map((address) => (
+            {rows.map((address) => (
                 <tr key={address.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {address.address}
@@ -46,6 +60,7 @@ const AddressesPage = ({
                         <SetAddressPrimaryButton
                             id={address.id}
                             isPrimary={address.isPrimary}
+                            onSuccess={() => handlePrimaryChanged(address.id)}
                         />
                         <DeleteAddressButton
                             id={address.id}

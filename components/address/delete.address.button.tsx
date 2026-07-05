@@ -41,6 +41,7 @@ const DeleteAddressButton = ({
 
     return (
         <button
+            type="button"
             className={`${isPrimary && !isSingleAddress ? "text-gray-500 cursor-not-allowed" : "text-red-600 hover:text-red-900 hover:cursor-pointer"}`}
             onClick={handleDelete}
             disabled={isPending || (isPrimary && !isSingleAddress)}

@@ -1,22 +1,20 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { getCurrentUser } from "@/lib/auth";
+
+import { requireCurrentUser } from "@/lib/auth";
 import { createAddressSchema } from "@/validators/address.schema";
 import {
     getAllAddresses,
     deleteAddressById,
     createAddress as createAddressRepo,
     setAddressPrimary as setAddressPrimaryRepo,
+    getPrimaryAddress as getPrimaryAddressRepo,
 } from "@/repositories/address.repository";
 
-import { redirect } from "next/navigation";
-
 export async function getAddresses() {
-    const user = await getCurrentUser();
-    if (!user) {
-        redirect("/sign-in");
-    }
+    const user = await requireCurrentUser();
 
     try {
         const addresses = await getAllAddresses(user.id);
@@ -27,10 +25,7 @@ export async function getAddresses() {
 }
 
 export async function deleteAddress(addressId: string) {
-    const user = await getCurrentUser();
-    if (!user) {
-        redirect("/sign-in");
-    }
+    const user = await requireCurrentUser();
 
     if (!addressId) {
         throw new Error("Address ID is required");
@@ -54,15 +49,11 @@ export async function createAddress(
     _prevState: CreateAddressState,
     formData: FormData,
 ) {
-    const user = await getCurrentUser();
-    if (!user) {
-        redirect("/sign-in");
-    }
+    const user = await requireCurrentUser();
 
     const parsedData = createAddressSchema.safeParse({
         address: formData.get("address"),
     });
-
     if (!parsedData.success) {
         return {
             // error: parsedData.error.issues[0].message,
@@ -77,23 +68,22 @@ export async function createAddress(
             ...parsedData.data,
             userId: user.id,
         });
-    } catch {
+    } catch (error) {
         return {
             // error: "Failed to create address",
             // key: Date.now(),
             success: false,
-            message: "Failed to create address",
+            message:
+                error instanceof Error
+                    ? error.message
+                    : "Failed to create address",
         };
     }
-
     redirect("/address");
 }
 
 export async function setAddressPrimary(addressId: string) {
-    const user = await getCurrentUser();
-    if (!user) {
-        redirect("/sign-in");
-    }
+    const user = await requireCurrentUser();
 
     if (!addressId) {
         throw new Error("Address ID is required");
@@ -101,8 +91,27 @@ export async function setAddressPrimary(addressId: string) {
 
     try {
         await setAddressPrimaryRepo(addressId, user.id);
-    } catch {
-        throw new Error("Failed to set address as primary");
+    } catch (error) {
+        throw new Error(
+            error instanceof Error
+                ? error.message
+                : "Failed to set address as primary",
+        );
     }
     revalidatePath("/address");
+}
+
+export async function getPrimaryAddress() {
+    const user = await requireCurrentUser();
+
+    try {
+        const primaryAddress = await getPrimaryAddressRepo(user.id);
+        return primaryAddress;
+    } catch (error) {
+        throw new Error(
+            error instanceof Error
+                ? error.message
+                : "Failed to fetch primary address",
+        );
+    }
 }
