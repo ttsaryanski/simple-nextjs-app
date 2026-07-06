@@ -3,7 +3,10 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
+import { getPrimaryAddress } from "@/services/address.services";
+
 import { requireCurrentUser } from "@/lib/auth";
+import { getMonthlyBillsData } from "@/lib/bill/bill.analytics";
 
 import {
     createBillSchema,
@@ -73,9 +76,11 @@ export async function getBillsPaginated(
     pageSize: number,
 ) {
     const user = await requireCurrentUser();
+    const primaryAddress = await getPrimaryAddress();
 
     let where = {
         userId: user.id,
+        addressId: primaryAddress?.id,
     };
     const queryNumber = Number(query);
     const isInteger = Number.isInteger(queryNumber);
@@ -88,12 +93,18 @@ export async function getBillsPaginated(
     if (isInteger) {
         where = {
             userId: user.id,
+            addressId: primaryAddress?.id,
             ...(query ? { year: queryNumber } : {}),
         };
     } else {
         where = {
             userId: user.id,
+            addressId: primaryAddress?.id,
         };
+    }
+
+    if (!primaryAddress) {
+        throw new Error("Primary address not found");
     }
 
     const totalCount = await getAllBillsCountWithQuery(where);
@@ -169,4 +180,22 @@ export async function editBill(
         };
     }
     redirect("/bills");
+}
+
+export async function getBillsDashboardData() {
+    const user = await requireCurrentUser();
+    const primaryAddress = await getPrimaryAddress();
+
+    if (!primaryAddress) {
+        throw new Error("Primary address not found");
+    }
+
+    const monthlyBillsData = await getMonthlyBillsData(
+        user.id,
+        primaryAddress.id,
+    );
+
+    return {
+        monthlyBillsData,
+    };
 }

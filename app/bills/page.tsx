@@ -3,7 +3,7 @@ import { getBillsPaginated } from "@/services/bill.services";
 import Pagination from "@/components/pagination";
 import DeleteBillButton from "@/components/bill/delete.bill.button";
 import EditBillButton from "@/components/bill/edit.bill.button";
-import SearchBillForm from "@/components/bill/search.bill";
+import SearchBillForm from "@/components/bill/search.bill.form";
 import PrimaryAddress from "@/components/address/primary.address";
 
 import { Bill } from "@/interfaces/Bill";
@@ -52,7 +52,7 @@ const BillsPage = async ({
             <main className="p-8">
                 <div className="mb-8">
                     <div className="flex items-center justify-between">
-                        <div>
+                        <div className="basis-1/2">
                             <h1 className="text-2xl font-semibold text-gray-900">
                                 Bills
                             </h1>
@@ -94,23 +94,39 @@ const BillsPage = async ({
                             </thead>
 
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {billsMap.map((bill, key) => (
-                                    <tr key={key} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 text-sm text-gray-500">
-                                            {bill.month}
-                                        </td>
-                                        <td className="px-6 py-4  text-sm text-gray-500">
-                                            {bill.year}
-                                        </td>
-                                        <td className="px-6 py-4  text-sm text-gray-900">
-                                            € {bill.total.toFixed(2)}
-                                        </td>
-                                        <td className="px-6 py-4  text-sm text-gray-500">
-                                            <EditBillButton id={bill.id} />
-                                            <DeleteBillButton id={bill.id} />
+                                {billsMap.length > 0 ? (
+                                    billsMap.map((bill, key) => (
+                                        <tr
+                                            key={key}
+                                            className="hover:bg-gray-50"
+                                        >
+                                            <td className="px-6 py-4 text-sm text-gray-500">
+                                                {bill.month}
+                                            </td>
+                                            <td className="px-6 py-4  text-sm text-gray-500">
+                                                {bill.year}
+                                            </td>
+                                            <td className="px-6 py-4  text-sm text-gray-900">
+                                                € {bill.total.toFixed(2)}
+                                            </td>
+                                            <td className="px-6 py-4  text-sm text-gray-500">
+                                                <EditBillButton id={bill.id} />
+                                                <DeleteBillButton
+                                                    id={bill.id}
+                                                />
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td
+                                            colSpan={4}
+                                            className="px-6 py-4 text-sm text-gray-500"
+                                        >
+                                            No bills found
                                         </td>
                                     </tr>
-                                ))}
+                                )}
                             </tbody>
                         </table>
                     </div>

@@ -20,7 +20,6 @@ export async function getDashboardData() {
         getDashboardStats(user.id),
         getWeeklyProductsData(user.id),
     ]);
-
     return {
         stats,
         weeklyProductsData,

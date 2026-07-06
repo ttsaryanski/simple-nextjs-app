@@ -17,12 +17,15 @@ const PrimaryAddress = () => {
     }, []);
 
     return (
-        <div className="primary">
-            <h1 className="text-2xl font-semibold text-gray-900">
-                For address
+        <div className="primary basis-1/2">
+            <h1 className="text-2xl text-right font-semibold text-gray-900">
+                Selected address
             </h1>
-            <p className="text-sm text-right text-gray-500">
+            <h2 className="text-1xl text-right font-semibold text-gray-500">
                 {address ? address : "Loading..."}
+            </h2>
+            <p className="text-sm text-right text-gray-500">
+                From the Addresses page, you can change your primary address.
             </p>
         </div>
     );

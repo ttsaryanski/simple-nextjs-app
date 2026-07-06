@@ -25,6 +25,7 @@ export async function createBill(data: CreateBillData) {
 
 export async function getAllBillsCountWithQuery(where: {
     userId: string;
+    addressId?: string;
     year?: number;
 }) {
     return prisma.bill.count({
@@ -35,6 +36,7 @@ export async function getAllBillsCountWithQuery(where: {
 export async function getAllBillsWithQuery(
     where: {
         userId: string;
+        addressId?: string;
         year?: number;
     },
     page: number,
@@ -91,6 +93,16 @@ export async function editBill(billId: string, total: number) {
         },
         data: {
             total: total,
+        },
+    });
+}
+
+export async function getTotalBills(userId: string, addressId: string) {
+    return prisma.bill.findMany({
+        where: { userId, addressId },
+        select: {
+            period: true,
+            total: true,
         },
     });
 }

@@ -104,7 +104,7 @@ export async function setAddressPrimary(addressId: string) {
                 : "Failed to set address as primary",
         );
     }
-    revalidatePath("/address");
+    redirect("/bills");
 }
 
 export async function getPrimaryAddress() {

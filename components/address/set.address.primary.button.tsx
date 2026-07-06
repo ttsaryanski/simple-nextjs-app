@@ -28,11 +28,16 @@ const SetAddressPrimaryButton = ({
                     await setAddressPrimary(id);
                     onSuccess?.();
                 } catch (error) {
-                    toast.error(
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to set address as primary",
-                    );
+                    if (
+                        error instanceof Error &&
+                        error.message !== "NEXT_REDIRECT"
+                    ) {
+                        toast.error(
+                            error instanceof Error
+                                ? error.message
+                                : "Failed to set address as primary",
+                        );
+                    }
                 }
             })();
         });
