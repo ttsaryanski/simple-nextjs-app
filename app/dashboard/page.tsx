@@ -1,4 +1,3 @@
-import { getDashboardData } from "@/services/product.services";
 import { getBillsDashboardData } from "@/services/bill.services";
 
 import PrimaryAddress from "@/components/address/primary.address";
@@ -10,8 +9,7 @@ import BillsLevel from "@/components/bill/bills.level";
 import BillsPrice from "@/components/bill/bills.price";
 
 const Dashboard = async () => {
-    // const { stats, weeklyProductsData } = await getDashboardData();
-    const { stats, monthlyBillsData, monthlyAllBillsData } =
+    const { stats, priceStats, monthlyBillsData, monthlyAllBillsData } =
         await getBillsDashboardData();
 
     return (
@@ -60,7 +58,16 @@ const Dashboard = async () => {
                     {/* Bills over all time */}
                     <div className="bg-white rounded-lg border border-gray-200 p-6">
                         <div className="flex items-center justify-between mb-6">
-                            <h2>Bills for full time</h2>
+                            <h2>
+                                Bills for full time{" "}
+                                {monthlyAllBillsData.length === 0 ? (
+                                    <span className="text-red-500">
+                                        - No data available
+                                    </span>
+                                ) : (
+                                    ""
+                                )}
+                            </h2>
                         </div>
                         <div className="h-48">
                             <BillsChartFull data={monthlyAllBillsData} />
@@ -93,14 +100,14 @@ const Dashboard = async () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    {/* Stock Levels */}
+                    {/* Bills Levels */}
                     <div className="bg-white rounded-lg border border-gray-200 p-6">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-lg font-semibold text-gray-900">
-                                Stock Levels
+                                Months with the highest / lowest consumption
                             </h2>
                         </div>
-                        <div className="space-y-3">
+                        <div className="space-y-5">
                             <BillsLevel stats={stats} />
                         </div>
                     </div>
@@ -109,10 +116,10 @@ const Dashboard = async () => {
                     <div className="bg-white rounded-lg border border-gray-200 p-6">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-lg font-semibold text-gray-900">
-                                Actual Price
+                                Price
                             </h2>
                         </div>
-                        <BillsPrice stats={stats} />
+                        <BillsPrice stats={stats} priceStats={priceStats} />
                     </div>
                 </div>
             </main>

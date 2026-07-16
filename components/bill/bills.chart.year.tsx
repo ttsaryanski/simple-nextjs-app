@@ -26,7 +26,7 @@ const BillsChartYear = ({ data }: { data: ChartData[] }) => {
                 margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
                 <Euro />
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#dddddd" />
                 <XAxis
                     dataKey="month"
                     stroke="#666"

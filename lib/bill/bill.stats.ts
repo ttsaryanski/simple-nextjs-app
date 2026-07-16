@@ -1,18 +1,8 @@
-import {
-    getAllProductsCount,
-    getLowStockProductsCount,
-    getTotalProducts,
-    getRecentProducts,
-} from "../../repositories/product.repository";
 import { getAllPrices } from "../../repositories/price.repository";
-
-import {
-    getAllBillsCount,
-    getTotalBills,
-} from "../../repositories/bill.repository";
+import { getTotalBills } from "../../repositories/bill.repository";
 
 import { metricsForBills } from "./tools/metrics";
-import { effeciencyForBills } from "./tools/effeciency";
+import { priceForBills } from "./tools/price";
 
 export async function getBillDashboardStats(userId: string, addressId: string) {
     const totalBills = await getTotalBills(userId, addressId);
@@ -26,6 +16,18 @@ export async function getBillDashboardStats(userId: string, addressId: string) {
         day_price: Number(price.day_price),
         night_price: Number(price.night_price),
     }));
+
+    const sortedBills = bills.sort(
+        (a, b) => b.total_consumption_kwh - a.total_consumption_kwh,
+    );
+    const slicedBills =
+        sortedBills.length >= 6
+            ? [...sortedBills.slice(0, 3), ...sortedBills.slice(-3)]
+            : sortedBills.length > 3
+              ? [...sortedBills.slice(0, 2), ...sortedBills.slice(-2)]
+              : sortedBills.length > 1 && sortedBills.length <= 3
+                ? [...sortedBills.slice(0, 1), ...sortedBills.slice(-1)]
+                : sortedBills;
 
     let {
         billsForLastMonthCount,
@@ -45,68 +47,15 @@ export async function getBillDashboardStats(userId: string, addressId: string) {
         lastConsumption,
     } = metricsForBills(bills);
 
-    let { isPriceUp, lastDayPrice, lastNightPrice } = effeciencyForBills(
-        bills,
-        prices,
-    );
-
-    ////////////////////////////////////////////////////
-
-    const [productsCount, lowStock, totalProductsPrisma, recentProductsPrisma] =
-        await Promise.all([
-            getAllProductsCount(userId),
-            getLowStockProductsCount(userId),
-            getTotalProducts(userId),
-            getRecentProducts(userId),
-        ]);
-
-    const totalProducts = totalProductsPrisma.map((product) => ({
-        price: Number(product.price),
-        quantity: product.quantity,
-        createdAt: product.createdAt,
-    }));
-
-    const recentProducts = recentProductsPrisma.map((product) => ({
-        id: product.id,
-        name: product.name,
-        sku: product.sku,
-        price: Number(product.price),
-        quantity: product.quantity,
-        lowStockAt: product.lowStockAt,
-        userId: product.userId,
-        createdAt: product.createdAt,
-        updatedAt: product.updatedAt,
-    }));
-
-    const totalValue = totalProducts.reduce(
-        (sum, product) =>
-            sum + Number(product.price) * Number(product.quantity),
-        0,
-    );
-
-    const inStockCount = totalProducts.filter(
-        (p) => Number(p.quantity) > 5,
-    ).length;
-    const inStockPercentage =
-        productsCount > 0
-            ? Math.round((inStockCount / productsCount) * 100)
-            : 0;
-
-    const lowStockCount = totalProducts.filter(
-        (p) => Number(p.quantity) <= 5 && Number(p.quantity) >= 1,
-    ).length;
-    const lowStockPercentage =
-        productsCount > 0
-            ? Math.round((lowStockCount / productsCount) * 100)
-            : 0;
-
-    const outOfStockCount = totalProducts.filter(
-        (p) => Number(p.quantity) === 0,
-    ).length;
-    const outOfStockPercentage =
-        productsCount > 0
-            ? Math.round((outOfStockCount / productsCount) * 100)
-            : 0;
+    let {
+        isPriceUp,
+        lastDayPrice,
+        lastNightPrice,
+        lastBillDayPrice,
+        lastBillNightPrice,
+        isLastPriceLastBillPrice,
+        lastPriceStart,
+    } = priceForBills(bills, prices);
 
     return {
         billsForLastMonthCount,
@@ -127,16 +76,10 @@ export async function getBillDashboardStats(userId: string, addressId: string) {
         isPriceUp,
         lastDayPrice,
         lastNightPrice,
-        ////////////////
-        productsCount,
-        lowStock,
-        totalValue,
-        inStockCount,
-        inStockPercentage,
-        lowStockCount,
-        lowStockPercentage,
-        outOfStockCount,
-        outOfStockPercentage,
-        recentProducts,
+        lastBillDayPrice,
+        lastBillNightPrice,
+        isLastPriceLastBillPrice,
+        lastPriceStart,
+        slicedBills,
     };
 }

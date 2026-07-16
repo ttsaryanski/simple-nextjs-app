@@ -1,5 +1,7 @@
 import { TrendingUp, TrendingDown } from "lucide-react";
 
+import { BillWithAddressAndConsumption } from "@/interfaces/Bill";
+
 export type statsProps = {
     billsForLastMonthCount: number;
     isUp: boolean;
@@ -15,17 +17,11 @@ export type statsProps = {
     isPriceUp: boolean;
     lastDayPrice: number | null;
     lastNightPrice: number | null;
-    ////////////////////
-    recentProducts: {
-        name: string;
-        quantity: number;
-        lowStockAt: number | null;
-    }[];
-    inStockCount: number;
-    inStockPercentage: number | null;
-    lowStockPercentage: number | null;
-    outOfStockPercentage: number | null;
-    outOfStockCount: number;
+    lastBillDayPrice: number | null;
+    lastBillNightPrice: number | null;
+    isLastPriceLastBillPrice: boolean;
+    lastPriceStart: Date | null;
+    slicedBills: BillWithAddressAndConsumption[];
 };
 const BillsMetrics = ({ stats }: { stats: statsProps }) => {
     return (

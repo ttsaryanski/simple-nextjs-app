@@ -9,6 +9,7 @@ import { requireCurrentUser } from "@/lib/auth";
 import { getMonthlyBillsData } from "@/lib/bill/bill.analytics.year";
 import { getAllMonthlyBillsData } from "@/lib/bill/bill.analytics.full";
 import { getBillDashboardStats } from "@/lib/bill/bill.stats";
+import { getPeriodicData } from "@/lib/price/price.analytics";
 
 import {
     createBillSchema,
@@ -206,14 +207,17 @@ export async function getBillsDashboardData() {
         throw new Error("Primary address not found");
     }
 
-    const [stats, monthlyBillsData, monthlyAllBillsData] = await Promise.all([
-        getBillDashboardStats(user.id, primaryAddress.id),
-        getMonthlyBillsData(user.id, primaryAddress.id),
-        getAllMonthlyBillsData(user.id, primaryAddress.id),
-    ]);
+    const [stats, priceStats, monthlyBillsData, monthlyAllBillsData] =
+        await Promise.all([
+            getBillDashboardStats(user.id, primaryAddress.id),
+            getPeriodicData(user.id, primaryAddress.id),
+            getMonthlyBillsData(user.id, primaryAddress.id),
+            getAllMonthlyBillsData(user.id, primaryAddress.id),
+        ]);
 
     return {
         stats,
+        priceStats,
         monthlyBillsData,
         monthlyAllBillsData,
     };
