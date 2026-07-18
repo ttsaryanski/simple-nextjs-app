@@ -9,311 +9,279 @@ export type AnalyticsPeriod = {
 };
 
 export type AnalyticsResult =
-    | {
-          status: "ok";
-          data: AnalyticsPeriod[];
-      }
-    | {
-          status: "no-data";
-          data: AnalyticsPeriod[]; // винаги поне 1 елемент
-      };
+    | { status: "ok"; data: AnalyticsPeriod[] }
+    | { status: "no-data"; data: AnalyticsPeriod[] };
 
-const EMPTY_ANALYTICS_PERIOD: AnalyticsPeriod = {
-    label: "",
-    priceChangePct: null,
-    consumptionChangePct: null,
-    billChangePct: null,
-};
-
-function startOfMonth(date: Date) {
-    return new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0);
+function startOfMonth(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
-function toPeriodLabel(start: Date, end: Date) {
-    const fmt = (date: Date) =>
-        `${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
-
-    return `${fmt(start)} - ${fmt(end)}`;
+function toPeriodLabel(months: Date[]): string {
+    if (months.length === 0) return "";
+    const sorted = [...months].sort((a, b) => a.getTime() - b.getTime());
+    const fmt = (d: Date) =>
+        `${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+    return `${fmt(sorted[0])} - ${fmt(sorted[sorted.length - 1])}`;
 }
 
-function percentageChange(current: number, previous: number) {
+function percentageChange(current: number, previous: number): number | null {
     if (previous === 0) return null;
     return Number((((current - previous) / previous) * 100).toFixed(2));
 }
 
-function comparableMonthKey(date: Date) {
+function isSameHalfYear(month: number, referenceMonth: number): boolean {
+    const refHalf = referenceMonth < 6 ? 0 : 1; // 0..5 or 6..11
+    const mHalf = month < 6 ? 0 : 1;
+    return refHalf === mHalf;
+}
+
+function getComparableKey(date: Date): string {
     return String(date.getMonth() + 1).padStart(2, "0");
 }
 
-export async function getPeriodicData(userId: string, addressId: string) {
+type MonthlyValue = { consumption: number; bill: number; date: Date };
+
+type PeriodMetrics = {
+    priceIndex: number;
+    avgPrice: number;
+    monthlyMap: Map<string, MonthlyValue>;
+    label: string;
+};
+
+function buildMonthlyMapForPricePeriod(
+    bills: Array<{
+        total: number;
+        total_consumption_kwh: number;
+        period: Date;
+    }>,
+    periodStart: Date,
+    periodEnd: Date,
+    latestHalfMonth: number,
+): Map<string, MonthlyValue> {
+    const monthlyMap = new Map<string, MonthlyValue>();
+
+    for (const bill of bills) {
+        if (bill.period < periodStart || bill.period > periodEnd) continue;
+        if (!isSameHalfYear(bill.period.getMonth(), latestHalfMonth)) continue;
+
+        const key = getComparableKey(bill.period);
+        const existing = monthlyMap.get(key);
+        if (existing) {
+            existing.consumption += bill.total_consumption_kwh;
+            existing.bill += bill.total;
+        } else {
+            monthlyMap.set(key, {
+                consumption: bill.total_consumption_kwh,
+                bill: bill.total,
+                date: bill.period,
+            });
+        }
+    }
+
+    return monthlyMap;
+}
+
+export async function getPeriodicData(
+    userId: string,
+    addressId: string,
+): Promise<AnalyticsResult> {
     const totalBills = await getTotalBills(userId, addressId);
     const totalPrices = await getAllPrices();
 
     if (totalBills.length === 0 || totalPrices.length === 0) {
-        return {
-            status: "no-data",
-            data: [EMPTY_ANALYTICS_PERIOD],
-        } satisfies AnalyticsResult;
+        return { status: "no-data", data: [] };
     }
 
-    const bills = totalBills.map((bill) => ({
-        ...bill,
-        total: Number(bill.total),
-        total_consumption_kwh: Number(bill.total_consumption_kwh),
-        period: new Date(bill.period),
+    const bills = totalBills.map((b) => ({
+        ...b,
+        total: Number(b.total),
+        total_consumption_kwh: Number(b.total_consumption_kwh),
+        period: startOfMonth(new Date(b.period)),
     }));
 
     const prices = totalPrices
-        .map((price) => ({
-            ...price,
-            day_price: Number(price.day_price),
-            night_price: Number(price.night_price),
-            period_start: new Date(price.period_start),
-            period_end: new Date(price.period_end),
+        .map((p) => ({
+            ...p,
+            day_price: Number(p.day_price),
+            night_price: Number(p.night_price),
+            period_start: startOfMonth(new Date(p.period_start)),
+            period_end: startOfMonth(new Date(p.period_end)),
         }))
         .sort((a, b) => a.period_start.getTime() - b.period_start.getTime());
 
-    const latestBillDate = bills[bills.length - 1].period;
+    const latestBill = [...bills].sort(
+        (a, b) => b.period.getTime() - a.period.getTime(),
+    )[0];
+
+    const latestHalfMonth = latestBill.period.getMonth();
 
     let latestPriceIndex = prices.findIndex(
-        (price) =>
-            latestBillDate >= price.period_start &&
-            latestBillDate <= price.period_end,
+        (p) =>
+            latestBill.period >= p.period_start &&
+            latestBill.period <= p.period_end,
     );
 
     if (latestPriceIndex === -1) {
         latestPriceIndex = prices.findLastIndex(
-            (price) => price.period_end <= latestBillDate,
-        );
-    }
-    if (latestPriceIndex === -1) {
-        latestPriceIndex = prices.findLastIndex(
-            (price) => price.period_start <= latestBillDate,
+            (p) => p.period_end <= latestBill.period,
         );
     }
 
-    if (latestPriceIndex < 1) {
-        return {
-            status: "no-data",
-            data: [EMPTY_ANALYTICS_PERIOD],
-        } satisfies AnalyticsResult;
+    if (latestPriceIndex < 0) {
+        return { status: "no-data", data: [] };
     }
 
-    const selectedPeriods: { index: number; price: (typeof prices)[number] }[] =
-        [];
-
-    let currentIndex = latestPriceIndex;
-    let referenceMonthKeys = new Set<string>();
-
-    while (selectedPeriods.length < 3 && currentIndex >= 0) {
-        const price = prices[currentIndex];
-        const billsInPeriod = bills.filter(
+    // Pick up to 3 relevant price periods (latest and previous),
+    // but only if they have bills in the same half-year.
+    const selectedIndices: number[] = [];
+    for (
+        let idx = latestPriceIndex;
+        idx >= 0 && selectedIndices.length < 3;
+        idx--
+    ) {
+        const price = prices[idx];
+        const hasBills = bills.some(
             (b) =>
-                b.period >= price.period_start && b.period <= price.period_end,
+                b.period >= price.period_start &&
+                b.period <= price.period_end &&
+                isSameHalfYear(b.period.getMonth(), latestHalfMonth),
         );
-
-        if (billsInPeriod.length === 0) {
-            currentIndex--;
-            continue;
-        }
-
-        const monthKeys = new Set(
-            billsInPeriod.map((b) =>
-                comparableMonthKey(startOfMonth(b.period)),
-            ),
-        );
-
-        if (selectedPeriods.length === 0) {
-            // Най-новият период
-            selectedPeriods.push({ index: currentIndex, price });
-            referenceMonthKeys = monthKeys;
-        } else {
-            const hasOverlap = Array.from(monthKeys).some((key) =>
-                referenceMonthKeys.has(key),
-            );
-
-            if (hasOverlap || selectedPeriods.length < 2) {
-                selectedPeriods.unshift({ index: currentIndex, price });
-                if (hasOverlap) referenceMonthKeys = monthKeys;
-            }
-        }
-
-        currentIndex--;
+        if (hasBills) selectedIndices.push(idx);
     }
 
-    if (selectedPeriods.length < 2) {
-        return {
-            status: "no-data",
-            data: [EMPTY_ANALYTICS_PERIOD],
-        } satisfies AnalyticsResult;
+    // Need at least 2 periods for at least one comparison.
+    if (selectedIndices.length < 2) {
+        return { status: "no-data", data: [] };
     }
 
-    const selectedPrices = selectedPeriods.map((p) => p.price);
+    // Oldest -> newest so latest stays LAST in result
+    selectedIndices.sort((a, b) => a - b);
 
-    const periodMonthlyStats = selectedPrices.map((price) => {
-        const periodStartMonth = startOfMonth(price.period_start);
-        const periodEndMonth = startOfMonth(price.period_end);
+    const monthlyMapCache = new Map<number, Map<string, MonthlyValue>>();
 
-        const monthly = new Map<
-            string,
-            {
-                month: Date;
-                key: string;
-                totalConsumptionKwh: number;
-                totalBill: number;
-            }
-        >();
-
-        for (const bill of bills) {
-            if (
-                bill.period < price.period_start ||
-                bill.period > price.period_end
-            )
-                continue;
-
-            const billMonth = startOfMonth(bill.period);
-            if (billMonth < periodStartMonth || billMonth > periodEndMonth)
-                continue;
-
-            const key = comparableMonthKey(billMonth);
-            const existing = monthly.get(key);
-
-            if (existing) {
-                existing.totalConsumptionKwh += bill.total_consumption_kwh;
-                existing.totalBill = Number(
-                    (existing.totalBill + bill.total).toFixed(2),
-                );
-            } else {
-                monthly.set(key, {
-                    month: billMonth,
-                    key,
-                    totalConsumptionKwh: bill.total_consumption_kwh,
-                    totalBill: Number(bill.total.toFixed(2)),
-                });
-            }
-        }
-
-        const sortedMonths = Array.from(monthly.values()).sort(
-            (a, b) => b.month.getTime() - a.month.getTime(),
+    const periodData: PeriodMetrics[] = selectedIndices.map((priceIndex) => {
+        const price = prices[priceIndex];
+        const monthlyMap = buildMonthlyMapForPricePeriod(
+            bills,
+            price.period_start,
+            price.period_end,
+            latestHalfMonth,
         );
+        monthlyMapCache.set(priceIndex, monthlyMap);
+
+        const avgPrice = Number(
+            ((price.day_price + price.night_price) / 2).toFixed(5),
+        );
+        const months = Array.from(monthlyMap.values()).map((m) => m.date);
 
         return {
-            periodStartMonth,
-            periodEndMonth,
-            averagePrice: Number(
-                ((price.day_price + price.night_price) / 2).toFixed(5),
-            ),
-            months: sortedMonths.slice(0, 12),
+            priceIndex,
+            avgPrice,
+            monthlyMap,
+            label: toPeriodLabel(months),
         };
     });
 
-    const basePeriods = periodMonthlyStats.map((period) => {
-        const sortedByDate = period.months
-            .slice()
-            .sort((a, b) => a.month.getTime() - b.month.getTime());
+    // Use the smallest month match as benchmark (etalon) across selected periods.
+    // This prevents skew by forcing all consumption/bill comparisons to analogous months only.
+    const benchmarkPeriod = periodData
+        .filter((p) => p.monthlyMap.size > 0)
+        .sort((a, b) => {
+            if (a.monthlyMap.size !== b.monthlyMap.size) {
+                return a.monthlyMap.size - b.monthlyMap.size;
+            }
 
-        const label =
-            sortedByDate.length > 0
-                ? toPeriodLabel(
-                      sortedByDate[0].month,
-                      sortedByDate[sortedByDate.length - 1].month,
-                  )
-                : toPeriodLabel(period.periodStartMonth, period.periodEndMonth);
+            // Prefer the newest period when month counts are equal.
+            return b.priceIndex - a.priceIndex;
+        })[0];
 
-        return {
-            label,
-            averagePrice: period.averagePrice,
-            monthMap: new Map(period.months.map((m) => [m.key, m])),
-        };
-    });
+    const benchmarkMonthKeys = new Set(
+        benchmarkPeriod ? Array.from(benchmarkPeriod.monthlyMap.keys()) : [],
+    );
 
-    const result: AnalyticsPeriod[] = basePeriods.map((period, index) => {
-        if (index === 0) {
-            const prevPriceIndex = selectedPeriods[0].index - 1;
-            const previousPrice =
-                prevPriceIndex >= 0 ? prices[prevPriceIndex] : null;
+    if (benchmarkMonthKeys.size === 0) {
+        return { status: "no-data", data: [] };
+    }
 
-            return {
-                label: period.label,
-                priceChangePct: previousPrice
-                    ? percentageChange(
-                          period.averagePrice,
-                          Number(
-                              (
-                                  (previousPrice.day_price +
-                                      previousPrice.night_price) /
-                                  2
-                              ).toFixed(5),
-                          ),
-                      )
-                    : null,
-                consumptionChangePct: null,
-                billChangePct: null,
-            };
-        }
-
-        const previous = basePeriods[index - 1];
-        const sharedMonthKeys = Array.from(period.monthMap.keys()).filter(
-            (key) => previous.monthMap.has(key),
-        );
-
+    const result: AnalyticsPeriod[] = periodData.map((curr, i) => {
+        let priceChangePct: number | null = null;
         let consumptionChangePct: number | null = null;
         let billChangePct: number | null = null;
+        const comparableMonths = Array.from(curr.monthlyMap.values())
+            .filter((m) => benchmarkMonthKeys.has(getComparableKey(m.date)))
+            .map((m) => m.date);
+        const comparableLabel = toPeriodLabel(comparableMonths);
 
-        if (sharedMonthKeys.length > 0) {
-            const currentConsumption = sharedMonthKeys.reduce(
-                (sum, key) =>
-                    sum + (period.monthMap.get(key)?.totalConsumptionKwh ?? 0),
+        // Price comparison with immediate previous PRICE period (fallback by index)
+        // to avoid broken chain when periods are irregular.
+        for (let p = curr.priceIndex - 1; p >= 0; p--) {
+            const prevPriceAvg = Number(
+                ((prices[p].day_price + prices[p].night_price) / 2).toFixed(5),
+            );
+            priceChangePct = percentageChange(curr.avgPrice, prevPriceAvg);
+            break;
+        }
+
+        // Consumption/Bill comparison with nearest previous PRICE period
+        // (fallback by index), including periods outside the selected 3.
+        for (let p = curr.priceIndex - 1; p >= 0; p--) {
+            let prevMonthlyMap = monthlyMapCache.get(p);
+            if (!prevMonthlyMap) {
+                prevMonthlyMap = buildMonthlyMapForPricePeriod(
+                    bills,
+                    prices[p].period_start,
+                    prices[p].period_end,
+                    latestHalfMonth,
+                );
+                monthlyMapCache.set(p, prevMonthlyMap);
+            }
+
+            const sharedKeys = Array.from(curr.monthlyMap.keys()).filter(
+                (k) => prevMonthlyMap.has(k) && benchmarkMonthKeys.has(k),
+            );
+
+            if (sharedKeys.length === 0) continue;
+
+            const currCons = sharedKeys.reduce(
+                (s, k) => s + curr.monthlyMap.get(k)!.consumption,
+                0,
+            );
+            const prevCons = sharedKeys.reduce(
+                (s, k) => s + prevMonthlyMap.get(k)!.consumption,
+                0,
+            );
+            const currBill = sharedKeys.reduce(
+                (s, k) => s + curr.monthlyMap.get(k)!.bill,
+                0,
+            );
+            const prevBill = sharedKeys.reduce(
+                (s, k) => s + prevMonthlyMap.get(k)!.bill,
                 0,
             );
 
-            const previousConsumption = sharedMonthKeys.reduce(
-                (sum, key) =>
-                    sum +
-                    (previous.monthMap.get(key)?.totalConsumptionKwh ?? 0),
-                0,
-            );
-
-            const currentBill = Number(
-                sharedMonthKeys
-                    .reduce(
-                        (sum, key) =>
-                            sum + (period.monthMap.get(key)?.totalBill ?? 0),
-                        0,
-                    )
-                    .toFixed(2),
-            );
-
-            const previousBill = Number(
-                sharedMonthKeys
-                    .reduce(
-                        (sum, key) =>
-                            sum + (previous.monthMap.get(key)?.totalBill ?? 0),
-                        0,
-                    )
-                    .toFixed(2),
-            );
-
-            consumptionChangePct = percentageChange(
-                currentConsumption,
-                previousConsumption,
-            );
-            billChangePct = percentageChange(currentBill, previousBill);
+            consumptionChangePct = percentageChange(currCons, prevCons);
+            billChangePct = percentageChange(currBill, prevBill);
+            break;
         }
 
         return {
-            label: period.label,
-            priceChangePct: percentageChange(
-                period.averagePrice,
-                previous.averagePrice,
-            ),
+            label: comparableLabel,
+            priceChangePct,
             consumptionChangePct,
             billChangePct,
         };
     });
 
-    return {
-        status: "ok",
-        data: result,
-    } satisfies AnalyticsResult;
+    const hasAnyFullComparison = result.some(
+        (r) =>
+            r.priceChangePct !== null &&
+            r.consumptionChangePct !== null &&
+            r.billChangePct !== null,
+    );
+
+    if (!hasAnyFullComparison) {
+        return { status: "no-data", data: [] };
+    }
+
+    return { status: "ok", data: result };
 }
