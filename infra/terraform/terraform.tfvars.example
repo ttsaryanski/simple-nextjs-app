@@ -1,0 +1,25 @@
+# ----------------- RG -----------------
+resource_group_name     = ""
+resource_group_location = ""
+
+# ----------------- NETWORK -----------------
+# ----------------- NSG -----------------
+network_security_group_name = ""
+allowed_ip_address          = ""
+
+# ----------------- VNET -----------------
+virtual_network_name = ""
+
+# ----------------- Subnet -----------------
+subnet_name = ""
+
+# ----------------- PIP -----------------
+public_ip_name    = ""
+domain_name_label = "p"
+
+# ----------------- NIC -----------------
+network_interface_name = ""
+
+# ----------------- VM -----------------
+vm_name           = ""
+vm_admin_username = ""
