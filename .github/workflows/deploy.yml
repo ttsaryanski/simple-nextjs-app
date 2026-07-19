@@ -37,7 +37,30 @@ jobs:
       - name: Add host key
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H "${{ secrets.POWERTRACK_SSH_HOST }}" >> ~/.ssh/known_hosts
+          HOST="${{ secrets.POWERTRACK_SSH_HOST }}"
+
+          if [ -z "$HOST" ]; then
+            HOST=$(awk '
+              /^\[/{in_web=($0=="[web]"); next}
+              in_web && $0 !~ /^\s*($|#)/ {
+                for (i = 1; i <= NF; i++) {
+                  if ($i ~ /^ansible_host=/) {
+                    split($i, a, "=")
+                    print a[2]
+                    exit
+                  }
+                }
+              }
+            ' infra/ansible/inventory.ini)
+          fi
+
+          if [ -z "$HOST" ]; then
+            echo "No SSH host found. Set POWERTRACK_SSH_HOST secret or ansible_host in infra/ansible/inventory.ini"
+            exit 1
+          fi
+
+          ssh-keyscan -T 15 -H "$HOST" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
 
       - name: Deploy with Ansible
         working-directory: infra/ansible
