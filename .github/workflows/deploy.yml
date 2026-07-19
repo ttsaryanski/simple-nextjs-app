@@ -39,6 +39,11 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H "${{ secrets.POWERTRACK_SSH_HOST }}" >> ~/.ssh/known_hosts
 
+      - name: Prepare Ansible Vault password
+        run: |
+          printf '%s' "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > ~/.ansible_vault_pass
+          chmod 600 ~/.ansible_vault_pass
+
       - name: Deploy with Ansible
         working-directory: infra/ansible
         env:
@@ -46,4 +51,5 @@ jobs:
         run: |
           ansible-playbook -i inventory.ini playbooks/site.yml \
             --private-key ~/.ssh/powertrack_key \
+            --vault-password-file ~/.ansible_vault_pass \
             --extra-vars "repo_url=https://github.com/${{ github.repository }}.git repo_branch=${{ github.ref_name }} app_dir=${{ secrets.POWERTRACK_APP_DIR }} domain_name=${{ secrets.POWERTRACK_DOMAIN }} admin_email=${{ secrets.POWERTRACK_ADMIN_EMAIL }}"
