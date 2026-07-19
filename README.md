@@ -1,5 +1,7 @@
 # Electricity Bills Archive and Analytics
 
+Live app: http://powertrack.duckdns.org
+
 Full-stack web application for storing electricity bills, managing addresses, and analyzing payment and consumption trends over time.
 
 ## Overview
