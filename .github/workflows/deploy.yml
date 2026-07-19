@@ -52,4 +52,5 @@ jobs:
           ansible-playbook -i inventory.ini playbooks/site.yml \
             --private-key ~/.ssh/powertrack_key \
             --vault-password-file ~/.ansible_vault_pass \
+            -e "ansible_ssh_private_key_file=/home/runner/.ssh/powertrack_key" \
             --extra-vars "repo_url=https://github.com/${{ github.repository }}.git repo_branch=${{ github.ref_name }} app_dir=${{ secrets.POWERTRACK_APP_DIR }} domain_name=${{ secrets.POWERTRACK_DOMAIN }} admin_email=${{ secrets.POWERTRACK_ADMIN_EMAIL }}"
