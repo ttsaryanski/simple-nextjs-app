@@ -24,7 +24,7 @@
     mode: "0600"
 
 - name: Install dependencies with npm ci
-  command: npm ci --no-audit --no-fund --omit=optional
+  command: npm ci --no-audit --no-fund
   args:
     chdir: "{{ app_dir }}"
   become_user: "{{ ansible_user }}"
