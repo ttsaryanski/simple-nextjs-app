@@ -1,8 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-
-import { toast } from "sonner";
+import { useActionState, useState } from "react";
 
 import { createAddress } from "@/services/address.services";
 

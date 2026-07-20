@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { getPrimaryAddress } from "@/services/address.services";
 
 import { requireCurrentUser } from "@/lib/auth";
+// import { checkBillRateLimit } from "@/lib/bill/bill.rate-limit";
 import { getMonthlyBillsData } from "@/lib/bill/bill.analytics.year";
 import { getAllMonthlyBillsData } from "@/lib/bill/bill.analytics.full";
 import { getBillDashboardStats } from "@/lib/bill/bill.stats";
@@ -36,6 +37,11 @@ export async function createBill(
     addressId: string,
 ) {
     const user = await requireCurrentUser();
+
+    // const success = checkBillRateLimit(user.id);
+    // if (!success) {
+    //     throw new Error("Rate limit exceeded");
+    // }
 
     const month = Number(formData.get("month"));
     const year = Number(formData.get("year"));
@@ -87,6 +93,11 @@ export async function getBillsPaginated(
 ) {
     const user = await requireCurrentUser();
     const primaryAddress = await getPrimaryAddress();
+
+    // const success = checkBillRateLimit(user.id);
+    // if (!success) {
+    //     throw new Error("Rate limit exceeded");
+    // }
 
     let where = {
         userId: user.id,

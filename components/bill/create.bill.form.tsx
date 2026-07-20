@@ -47,7 +47,7 @@ const CreateBillForm = ({
     }, [state]);
 
     const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: 10 }, (_, i) => currentYear - 8 + i);
+    const years = Array.from({ length: 10 }, (_, i) => currentYear - 9 + i);
 
     return (
         <form className="space-y-6" action={FormAction}>
