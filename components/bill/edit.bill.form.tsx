@@ -182,6 +182,7 @@ const EditBillForm = ({
                 </label>
                 <input
                     type="number"
+                    step="0.01"
                     id="total"
                     name="total"
                     required

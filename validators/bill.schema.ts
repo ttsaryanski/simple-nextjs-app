@@ -17,6 +17,10 @@ export const createBillSchema = z.object({
         ),
     total: z
         .number()
+        .multipleOf(
+            0.01,
+            "Bill must be a valid number with up to 2 decimal places",
+        )
         .min(0, "Bill must be a positive number")
         .max(1000000, "Bill must be less than or equal to 1000000"),
     addressId: z.cuid2("Invalid address ID"),
@@ -34,6 +38,10 @@ export type YearQueryInput = z.infer<typeof yearQuerySchema>;
 export const editBillSchema = z.object({
     total: z
         .number()
+        .multipleOf(
+            0.01,
+            "Bill must be a valid number with up to 2 decimal places",
+        )
         .min(0, "Bill must be a positive number")
         .max(1000000, "Bill must be less than or equal to 1000000"),
     day_consumption_kwh: z
