@@ -22,6 +22,22 @@ const HomePage = async () => {
                         </Link>
                     </div>
                 </div>
+
+                <div className="mt-8 text-center">
+                    {/* <h1 className="text-5xl font-bold text-gray-900 mb-6">
+                        Bills history and analytics
+                    </h1> */}
+                    <p className="text-sm text-gray-600 mb-8 max-w-2xl mx-auto">
+                        Before you can use the app, add your address. This is
+                        the first step in setting up your account. You can do
+                        this on the{" "}
+                        <Link href="/address" className="text-purple-600">
+                            Address
+                        </Link>{" "}
+                        page.
+                    </p>
+                    <div className="flex gap-4 justify-center"></div>
+                </div>
             </div>
         </div>
     );
