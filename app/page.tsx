@@ -8,14 +8,6 @@ const HomePage = async () => {
                     <h1 className="text-5xl font-bold text-gray-900 mb-6">
                         Bills history and analytics
                     </h1>
-                    <p>
-                        {" "}
-                        Test env files{" "}
-                        {
-                            process.env
-                                .NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL
-                        }
-                    </p>
                     <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
                         Optimize the management of your electricity bills with
                         our powerful and easy-to-use system. Track your bills,
