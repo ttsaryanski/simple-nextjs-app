@@ -77,4 +77,8 @@ body {
   .form-div button {
     padding: calc(var(--spacing) * 0.5);
   }
+
+  .login {
+    width: auto;
+  }
 }
