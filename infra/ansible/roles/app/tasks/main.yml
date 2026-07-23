@@ -68,3 +68,15 @@
     chdir: "{{ app_dir }}"
     executable: /bin/bash
   become_user: "{{ ansible_user }}"
+
+- name: Configure PM2 startup
+  shell: pm2 startup systemd -u {{ ansible_user }} --hp /home/{{ ansible_user }}
+  args:
+    executable: /bin/bash
+  become: true
+
+- name: Save PM2 process list
+  shell: pm2 save
+  args:
+    executable: /bin/bash
+  become_user: "{{ ansible_user }}"
